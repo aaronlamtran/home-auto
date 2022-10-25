@@ -3,6 +3,7 @@ import os
 import json
 import configparser
 config = configparser.ConfigParser()
+from pathlib import Path
 from subprocess import call
 from dotenv import load_dotenv
 load_dotenv()
@@ -74,19 +75,18 @@ class Fan:
     def build_command(self):
         self.commands = {}
         for button, binary in self.ceiling.items():
-            self.commands[button] = f'sudo {self.bit_bang} -f {self.frequency_mhz} -0 {self.zero_length_ns} -1 {self.one_wvl_ns} -r {self.repeat} -p {self.pause_ns} {self.preamble}{binary}'.split(
-                ' ')
+            self.commands[button] = f'{self.bit_bang} -f {self.frequency_mhz} -0 {self.zero_length_ns} -1 {self.one_wvl_ns} -r {self.repeat} -p {self.pause_ns} {self.preamble}{binary}'
         return self.commands
 
     def toggle_light(self):
         print('self.toggle_light invoked')
         cmd = self.commands['light_toggle']
-        return_code = subprocess.run(cmd).returncode
-        # self.run_cmd(cmd)
-        if return_code == 1:  # err
-            return 'err'
-        if return_code == 0:
-            return 'success'
+        # return_code = subprocess.run(cmd).returncode
+        self.run_cmd(cmd)
+        # if return_code == 1:  # err
+        #     return 'err'
+        # if return_code == 0:
+        #     return 'success'
         return cmd
 
     def set_fan_off(self):
