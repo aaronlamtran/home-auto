@@ -1,13 +1,11 @@
 import subprocess
 import os
-import json
-import configparser
-config = configparser.ConfigParser()
 from pathlib import Path
 from subprocess import call
 from dotenv import load_dotenv
 load_dotenv()
 
+usr = os.environ.get('usr')
 pwd = os.environ.get('pwd')
 
 
@@ -39,7 +37,9 @@ class Fan:
         self.build_command()
 
     def run_cmd(self, cmd):
-        call('echo {} | sudo -S {}'.format(pwd, cmd), shell=True)
+        cmd = '''echo {} | su -c '{}' {}'''.format(pwd, cmd, usr)
+        print('COMMAND: ', cmd)
+        call(cmd , shell=True)
 
     def get_status_fan(self):
         with open('settings.json', 'r') as r:
@@ -51,7 +51,6 @@ class Fan:
     def set_status(self, req):
         old_status = self.get_status_fan()
         for param, new_status in req.items():
-            # print(param)
             if param == 'fan_direction':
                 self.set_fan_fwd_rev_toggle()
             if param == 'light':
@@ -68,14 +67,14 @@ class Fan:
             old_status[param] = new_status
 
         newest_status = old_status
-        with open('settings.json', 'w', encoding='utf-8') as w:
-            json.dump(newest_status, w, ensure_ascii=False, indent=4, sort_keys=True)
+#        with open('settings.json', 'w', encoding='utf-8') as w:
+#            json.dump(newest_status, w, ensure_ascii=False, indent=4, sort_keys=True)
         return newest_status
 
     def build_command(self):
         self.commands = {}
         for button, binary in self.ceiling.items():
-            self.commands[button] = f'{self.bit_bang} -f {self.frequency_mhz} -0 {self.zero_length_ns} -1 {self.one_wvl_ns} -r {self.repeat} -p {self.pause_ns} {self.preamble}{binary}'
+            self.commands[button] = f'sudo -u root {self.bit_bang} -f {self.frequency_mhz} -0 {self.zero_length_ns} -1 {self.one_wvl_ns} -r {self.repeat} -p {self.pause_ns} {self.preamble}{binary}'
         return self.commands
 
     def toggle_light(self):
@@ -123,21 +122,3 @@ class Fan:
         print(cmd)
         subprocess.run(cmd)
         return cmd
-
-#
-# bedroom_fan = Fan()
-# for each in bedroom_fan:
-#     print(each)
-
-# print(vars(bedroom_fan))
-# print(bedroom_fan.get_status_fan())
-# bedroom_fan.toggle_light()
-# bedroom_fan.set_fan_off()
-# bedroom_fan.set_fan_hi()
-# bedroom_fan.set_fan_med()
-# bedroom_fan.set_fan_low()
-# bedroom_fan.set_fan_fwd_rev_toggle()
-
-# subprocess.run(light_on_cmd)
-# if __name__ == '__main__':
-#   build_command()
